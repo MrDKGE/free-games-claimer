@@ -160,6 +160,13 @@ try {
     if (cfg.dryrun) continue;
     if (cfg.interactive && !await confirm()) continue;
     await (await card.$('.tw-button:has-text("Claim")')).click();
+    // Prime Model Check
+    if (await page.$('[data-a-target="prime-upsell-modal"]')) {
+      console.error('Prime upsell modal detected during scrolling.');
+      await notify('Prime upsell modal detected. User is not an Amazon Prime member.');
+      await context.close();
+      process.exit(1);
+    }
     db.data[user][title] ||= { title, time: datetime(), url, store: 'internal' };
     notify_games.push({ title, status: 'claimed', url });
     // const img = await (await card.$('img.tw-image')).getAttribute('src');
@@ -188,6 +195,13 @@ try {
     if (cfg.dryrun) continue;
     if (cfg.interactive && !await confirm()) continue;
     await Promise.any([page.click('[data-a-target="buy-box"] .tw-button:has-text("Get game")'), page.click('[data-a-target="buy-box"] .tw-button:has-text("Claim")'), page.click('.tw-button:has-text("Complete Claim")'), page.waitForSelector('div:has-text("Link game account")'), page.waitForSelector('.thank-you-title:has-text("Success")')]); // waits for navigation
+    // Prime Model Check
+    if (await page.locator('[data-a-target="GetPrimeGamingModal"]').count() > 0) {
+      console.error('User is not an Amazon Prime member - Get Prime Gaming modal detected. Exiting!');
+      await notify('User is not an Amazon Prime member. No games can be claimed.');
+      await context.close();
+      process.exit(1);
+    }
     db.data[user][title] ||= { title, time: datetime(), url, store };
     const notify_game = { title, url };
     notify_games.push(notify_game); // status is updated below
